@@ -1,0 +1,12 @@
+@reset-global pc;
+
+html,
+body {
+    height: 100%;
+    font-size: 14px;
+    font-family: "Helvetica", "STHeiti";
+}
+
+main {
+    height: 100%;
+}
