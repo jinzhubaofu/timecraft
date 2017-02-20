@@ -11,6 +11,9 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = function (server) {
 
     return require('./webpack.base')({
+
+        target: 'electron',
+
         // Add hot reloading in development
         entry: [
             'webpack-hot-middleware/client',
@@ -50,15 +53,14 @@ module.exports = function (server) {
                     });
 
                 }
+            }),
+            new webpack.DefinePlugin({
+                'process.env.NODE_ENV': JSON.stringify('development')
             })
         ],
 
         // Load the CSS in a style tag in development
         cssLoaders: 'style!css?localIdentName=[local]__[path][name]__[hash:base64:5]&modules&importLoaders=1&sourceMap!postcss',
-
-        // Tell babel that we want to hot-reload
-        babelQuery: {
-        },
 
         // Emit a source map for easier debugging
         devtool: 'eval-source-map'

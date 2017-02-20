@@ -1,0 +1,11 @@
+{
+    "eslint": {
+        "env": {
+            "es6": -1,
+            "node": 1
+        },
+        "rules": {
+            "fecs-no-require": -1
+        }
+    }
+}

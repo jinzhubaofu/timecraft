@@ -6,16 +6,24 @@
 const path = require('path');
 const webpack = require('webpack');
 const output = path.join(__dirname, '../asset');
+const base = require('./webpack.base');
 
-module.exports = require('./webpack.base')({
+module.exports = base({
     context: process.cwd(),
+    target: 'electron-renderer',
     entry: {
         inf: [
+            'redux',
+            'react-redux',
+            'redux-logger',
+            'reselect',
+            'electron',
             'react',
             'react-dom',
             'lodash',
             'codemirror',
             'react-hot-loader',
+            'react-addons-update',
             'markdown-it',
             'codemirror/mode/markdown/markdown',
             'codemirror/lib/codemirror.css',
@@ -35,7 +43,7 @@ module.exports = require('./webpack.base')({
             'markdown-it-anchor'
         ]
     },
-    devtool: 'eval',
+    devtool: 'eval-source-map',
     output: {
         filename: '[name].dll.js',
         path: output,
