@@ -5,37 +5,55 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './component/App';
-import {createStore, applyMiddleware} from 'redux';
+import {createStore, applyMiddleware, compose} from 'redux';
 import {Provider} from 'react-redux';
-import './main.css';
+import {AppContainer} from 'react-hot-loader';
+import thunk from 'redux-thunk';
+
 import reducer from './reducer';
+import App from './component/App';
 import createInterface from './util/createInterface';
 import {WEB_CONTENTS_INTERFACE} from '../common/constants';
+import './main.styl';
 
-const middlewares = [];
+const middlewares = [thunk];
 
 if (process.env.NODE_ENV === 'development') {
-
     middlewares.push(
         require('redux-logger')({
-            collapsed: true
+            collapsed: true,
+            logErrors: false
         })
     );
-
 }
+
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 const store = createStore(
     reducer,
-    applyMiddleware(...middlewares)
+    composeEnhancers(applyMiddleware(...middlewares))
 );
 
-ReactDOM.render(
-    <Provider store={store}>
-        <App />
-    </Provider>,
-    document.querySelector('#main')
-);
+function render(Component) {
+    ReactDOM.render(
+        <AppContainer>
+            <Provider store={store}>
+                <Component />
+            </Provider>
+        </AppContainer>,
+        document.querySelector('#main')
+    );
+}
+
+render(App);
+
+
+// Hot Module Replacement API
+if (module.hot) {
+    module.hot.accept('./component/App', () => {
+        render(App);
+    });
+}
 
 // 给 main 的接口
 window[WEB_CONTENTS_INTERFACE] = createInterface(store);

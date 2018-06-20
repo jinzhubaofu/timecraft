@@ -1,0 +1,71 @@
+/**
+ * @file preview
+ * @author leon <ludafa@outlook.com>
+ */
+
+
+.preview
+    @require 'github-markdown-css/github-markdown.css';
+    flex: 0 0 50%;
+    box-sizing: border-box;
+    border-left: 1px solid #ddd;
+    padding: 1rem;
+    line-height: 1.2;
+    font-size: 1em;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+h1 > .header-anchor
+    opacity: 0;
+
+h1:hover > .header-anchor
+    opacity: 1;
+
+h2 > .header-anchor
+    opacity: 0;
+
+h2:hover > .header-anchor
+    opacity: 1;
+
+
+h3 > .header-anchor
+    opacity: 0;
+
+h3:hover > .header-anchor
+    opacity: 1;
+
+
+h4 > .header-anchor
+    opacity: 0;
+
+h4:hover > .header-anchor
+    opacity: 1;
+
+h5 > .header-anchor
+    opacity: 0;
+
+h5:hover > .header-anchor
+    opacity: 1;
+
+h6 > .header-anchor
+    opacity: 0;
+
+h6:hover > .header-anchor
+    opacity: 1;
+
+
+.preview ol
+    list-style: decimal;
+
+
+.preview ul
+    list-style: initial;
+
+
+/*.preview h2 >.header-anchor,
+.preview h3 >.header-anchor,
+.preview h4 >.header-anchor,
+.preview h5 >.header-anchor,
+.preview h6 >.header-anchor {
+    opacity: 0;
+}*/

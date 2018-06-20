@@ -6,53 +6,59 @@
 const path = require('path');
 const webpack = require('webpack');
 const output = path.join(__dirname, '../asset');
-const base = require('./webpack.base');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-module.exports = base({
-    context: process.cwd(),
+const css = new ExtractTextPlugin({
+    filename: '[name].css',
+    allChunks: true
+});
+
+module.exports = {
+
     target: 'electron-renderer',
-    entry: {
-        inf: [
-            'redux',
-            'react-redux',
-            'redux-logger',
-            'reselect',
-            'electron',
-            'react',
-            'react-dom',
-            'lodash',
-            'codemirror',
-            'react-hot-loader',
-            'react-addons-update',
-            'markdown-it',
-            'codemirror/mode/markdown/markdown',
-            'codemirror/lib/codemirror.css',
-            'codemirror/theme/monokai.css',
-            'classnames',
-            'markdown-it-deflist',
-            'markdown-it-emoji',
-            'markdown-it-footnote',
-            'markdown-it-ins',
-            'markdown-it-mark',
-            'markdown-it-abbr',
-            'markdown-it-container',
-            'markdown-it-sub',
-            'markdown-it-sup',
-            'highlight.js',
-            'events',
-            'markdown-it-anchor'
-        ]
-    },
-    devtool: 'eval-source-map',
+
+    entry: require('./dll'),
+
     output: {
-        filename: '[name].dll.js',
+        filename: '[name].js',
         path: output,
         library: '[name]'
     },
+
+    module: {
+        rules: [
+            {
+                test: /\.js$/,
+                loader: 'babel-loader',
+                exclude: /node_modules/
+            },
+            {
+                test: /\.css$/,
+                use: css.extract(['css-loader'])
+            }
+        ]
+    },
+
+    devtool: 'source-map',
+
     plugins: [
+
         new webpack.DllPlugin({
             name: '[name]',
             path: path.join(output, '[name].manifest.json')
-        })
-    ]
-});
+        }),
+
+        css,
+
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+        }),
+
+        new webpack.NamedModulesPlugin(),
+
+        new webpack.NoEmitOnErrorsPlugin()
+    ],
+    stats: {
+        children: false
+    }
+};

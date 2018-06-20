@@ -3,10 +3,10 @@
  * @author leon <ludafa@outlook.com>
  */
 
-const {app, Menu} = require('electron');
-const actions = require('./actions');
+import {app, Menu} from 'electron';
+import * as actions from './actions';
 
-module.exports = function () {
+export default function () {
 
     const template = [
         {
@@ -243,4 +243,4 @@ module.exports = function () {
 
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
-};
+}

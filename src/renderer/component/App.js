@@ -5,7 +5,6 @@
 
 import React, {Component} from 'react';
 import Editor from '../container/Editor';
-import styles from './App.css';
 import Preview from '../container/Preview';
 
 export default class App extends Component {
@@ -13,10 +12,10 @@ export default class App extends Component {
     render() {
 
         return (
-            <main className={styles.app}>
+            <div className="app">
                 <Editor />
                 <Preview />
-            </main>
+            </div>
         );
 
     }

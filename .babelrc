@@ -1,0 +1,47 @@
+{
+    "env": {
+        "main-dev": {
+            "presets": [
+                [
+                    "env",
+                    {
+                        "useBuiltIns": true,
+                        "targets": {
+                            "electron": 1
+                        }
+                    }
+                ]
+            ],
+            "plugins": [
+                "transform-decorators-legacy",
+                [
+                    "transform-object-rest-spread",
+                    {"useBuiltIns": true}
+                ]
+            ]
+        },
+        "renderer-dev": {
+            "presets": [
+                [
+                    "env",
+                    {
+                        "modules": false,
+                        "targets": {
+                            "electron": 1
+                        },
+                        "useBuiltIns": true
+                    }
+                ],
+                "react"
+            ],
+            "plugins": [
+                "transform-decorators-legacy",
+                [
+                    "transform-object-rest-spread",
+                    {"useBuiltIns": true}
+                ],
+                "react-hot-loader/babel"
+            ]
+        }
+    }
+}

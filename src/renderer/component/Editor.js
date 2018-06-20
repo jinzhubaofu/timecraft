@@ -5,18 +5,12 @@
 
 import React, {Component, PropTypes} from 'react';
 import CodeMirror from 'codemirror';
+import {throttle} from 'lodash';
+import {clipboard, remote} from 'electron';
 
-import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/gfm/gfm';
 import 'codemirror/mode/jsx/jsx';
 import 'codemirror/addon/selection/mark-selection';
-
-import styles from './Editor.css';
-
-// import {
-//     scrollPreview,
-//     onPreviewScroll
-// } from './ScrollSync';
 
 export default class Editor extends Component {
 
@@ -27,7 +21,7 @@ export default class Editor extends Component {
 
     componentDidMount() {
 
-        const {value} = this.props;
+        const {value, onScroll} = this.props;
 
         CodeMirror.mimeModes = Object
             .keys(CodeMirror.mimeModes)
@@ -57,8 +51,6 @@ export default class Editor extends Component {
 
             }, {});
 
-        console.log(CodeMirror.mimeModes);
-
         const cm = new CodeMirror(this.refs.main, {
             value,
             mode: {
@@ -72,48 +64,79 @@ export default class Editor extends Component {
                 highlightFormatting: true
             },
             indentUnit: 4,
-            lineNumbers: false,
+            // lineNumbers: true,
             lineWrapping: true,
             indentWithTabs: false,
-            theme: 'one-dark'
+            theme: 'one-dark',
+            smartIndent: true
         });
 
         cm.on('change', this.onChange);
 
         // let syncScrolling = false;
 
-        // cm.on('scroll', () => {
-        //
-        //     if (syncScrolling) {
-        //         syncScrolling = false;
-        //         return;
-        //     }
-        //
-        //     const doc = cm.getDoc();
-        //
-        //     const total = doc.lineCount();
-        //
-        //     const {
-        //         top,
-        //         clientHeight,
-        //         height
-        //     }  = cm.getScrollInfo();
-        //
-        //     const lineHeight = cm.defaultTextHeight();
-        //
-        //     const begin = cm.lineAtHeight(top, 'local');
-        //     const end = cm.lineAtHeight(top + clientHeight, 'local');
-        //
-        //     scrollPreview({
-        //         begin,
-        //         end,
-        //         lineHeight,
-        //         clientHeight,
-        //         height,
-        //         total
-        //     });
-        //
-        // });
+        function getStartLineInfo(scrollInfo) {
+
+            let line = cm.lineAtHeight(0);
+
+            let position = cm.charCoords({
+                line,
+                ch: 0
+            });
+
+            while (position.top < 16) {
+                line++;
+                position = cm.charCoords({
+                    line,
+                    ch: 0
+                });
+            }
+
+            return {
+                line,
+                distance: position.top
+            };
+
+        }
+
+        function getStopLintInfo({clientHeight}) {
+
+            let line = cm.lineAtHeight(clientHeight);
+            let position = cm.charCoords({line, ch: cm.getDoc().getLine(line).length - 1});
+
+            while (position.bottom > clientHeight + 16) {
+                line--;
+                position = cm.charCoords({line, ch: cm.getDoc().getLine(line).length - 1});
+            }
+
+            return {
+                line,
+                distance: clientHeight - position.bottom + 16
+            };
+
+        }
+
+        function getScrollData() {
+
+            let scrollInfo = cm.getScrollInfo();
+
+            let start = getStartLineInfo(scrollInfo);
+            let stop = getStopLintInfo(scrollInfo);
+
+            onScroll({
+                start: start.line,
+                stop: stop.line,
+                top: start.distance,
+                bottom: stop.distance,
+                lineCount: cm.getDoc().lineCount()
+            });
+
+        }
+
+
+        cm.on('scroll', throttle(getScrollData, 500, {leading: false, tailing: true}));
+
+        getScrollData();
 
         cm.addKeyMap({
             'Tab'(cm) {
@@ -135,10 +158,20 @@ export default class Editor extends Component {
             }
         });
 
-        // onPreviewScroll(line => {
-        //     syncScrolling = true;
-        //     cm.scrollTo(0, cm.heightAtLine(line, 'local'));
-        // });
+        cm.on('paste', (cm, e) => {
+            let formats = clipboard.availableFormats();
+            for (let i = 0, len = formats.length; i < len; i++) {
+                if (/^image/.test(formats[i])) {
+                    e.preventDefault();
+                    let imagePath = remote.require('./actions').clipboard.saveImage();
+                    if (imagePath) {
+                        cm.getDoc().replaceSelection(`\n![](${imagePath})\n`);
+                    }
+                }
+            }
+        });
+
+        cm.focus();
 
         this.cm = cm;
     }
@@ -192,14 +225,13 @@ export default class Editor extends Component {
     }
 
     render() {
-
         return (
             <div
                 ref="main"
                 style={{
                     fontSize: this.props.fontSize
                 }}
-                className={styles.editor} />
+                className="editor" />
         );
     }
 

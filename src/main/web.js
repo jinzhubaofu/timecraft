@@ -7,7 +7,6 @@ import {
     WEB_CONTENTS_INTERFACE
 } from '../common/constants';
 
-
 function execute(win, method, ...args) {
     args = args.map(arg => JSON.stringify(arg)).join(' ,');
     const code = `window.${WEB_CONTENTS_INTERFACE}.${method}(${args})`;
@@ -24,4 +23,8 @@ export function setTitle(win, title) {
 
 export function setContent(win, content) {
     return execute(win, 'setContent', content);
+}
+
+export function updateFile(win, path, content) {
+    return execute(win, 'updateFile', path, content);
 }

@@ -3,5 +3,5 @@
  * @author leon <ludafa@outlook.com>
  */
 
-require('babel-core/register');
+require('babel-register');
 require('./app');

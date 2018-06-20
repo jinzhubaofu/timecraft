@@ -1,0 +1,151 @@
+/**
+ * @file codemirror onedark theme css
+ * @author leon <ludafa@outlook.com>
+ */
+
+.cm-s-one-dark.CodeMirror
+
+    font-family: Hack, Arial, Helvetica, 'PingFang SC', 'Hiragino Sans GB' !important;
+    background: #282C34;
+    color: #ABB2BF;
+
+    div.CodeMirror-selected
+        background: #3E4451
+
+
+    .CodeMirror-line,
+    .CodeMirror-linenumber
+        line-height: 1.5
+
+    .CodeMirror-line::selection,
+    .CodeMirror-line > span::selection,
+    .CodeMirror-line > span > span::selection
+        background: rgba(73, 72, 62, 0.99)
+
+    .CodeMirror-line::-moz-selection,
+    .CodeMirror-line > span::-moz-selection,
+    .CodeMirror-line > span > span::-moz-selection
+        background: rgba(73, 72, 62, 0.99)
+
+    .CodeMirror-gutters
+        background: #282C34
+        border-right: 1px solid #282C34
+
+    .CodeMirror-guttermarker
+        color: white
+
+    .CodeMirror-guttermarker-subtle
+        color: #d0d0d0
+
+    .CodeMirror-linenumber
+        color: #4B5363
+
+
+    span.cm-formatting-list-ul
+        color: #e06c75
+
+
+    span.cm-code
+        color: #98c379
+        line-height: 1.2
+
+
+    .CodeMirror-cursor
+        border-left: 1px solid #528BFF
+
+
+    span.cm-atom
+        color: #64B6C3
+
+    span.cm-number
+        color: #D19A66
+
+    span.cm-property,
+    span.cm-attribute
+        color: #ABB2BF
+
+    span.cm-keyword
+        color: #D86C74
+
+    span.cm-comment
+        color: #5c6370
+        font-style: italic
+
+    span.cm-string
+        color: #98C379
+
+    span.cm-operator
+        color: #56b6c2
+
+    span.cm-variable
+        color: #ABB2BF
+
+    span.cm-variable-2
+        color: #abb2bf
+
+    span.cm-variable-3
+        color: #64B6C3
+
+    span.cm-def
+        color: #abb2bf
+
+    span.cm-bracket
+        color: #ABB2BF
+
+    span.cm-tag
+        color: #D86C74
+
+    span.cm-header
+        color: #D86C74
+
+    // span.cm-header-1
+    //     font-size: 2em
+    //     line-height: 2
+    //
+    // span.cm-header-2
+    //     font-size: 1.5em
+    //     line-height: 2
+    //
+    // span.cm-header-3
+    //     font-size: 1.4em
+    //     line-height: 2
+    //
+    // span.cm-header-4
+    //     font-size: 1.2em
+    //     line-height: 2
+    //
+    // span.cm-header-5
+    //     font-size: 1.1em
+    //     line-height: 2
+    //
+    // span.cm-header-6
+    //     font-size: 1em
+    //     line-height: 2
+
+    span.cm-link
+        color: #61afef
+
+    span.cm-url
+        color: #c678dd
+
+    span.cm-error
+        background: #f92672
+        color: red
+
+    span.cm-strong
+        color: #d19a66
+        font-weight: 700
+
+    span.cm-em
+        color: #c678dd
+        font-style: italic
+
+    span.cm-image-alt-text
+        color: #61afef
+
+    .CodeMirror-activeline-background
+        background: #2C323B
+
+    .CodeMirror-matchingbracket
+        text-decoration: underline
+        color: #ABB2BF !important

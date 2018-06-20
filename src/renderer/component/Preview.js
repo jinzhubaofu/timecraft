@@ -5,212 +5,169 @@
 
 
 import React, {Component, PropTypes} from 'react';
-import styles from './Preview.css';
-import MarkdownIt from 'markdown-it';
-
-import markdownItDeflist from 'markdown-it-deflist';
-import markdownItEmoji from 'markdown-it-emoji';
-import markdownItFootnote from 'markdown-it-footnote';
-import markdownItIns from 'markdown-it-ins';
-import markdownItMark from 'markdown-it-mark';
-import markdownItAbbr from 'markdown-it-abbr';
-import markdownItContainer from 'markdown-it-container';
-import markdownItSub from 'markdown-it-sub';
-import markdownItSup from 'markdown-it-sup';
-import hljs from 'highlight.js';
-import 'highlight.js/styles/atom-one-light.css';
-import markdownItAnchor from 'markdown-it-anchor';
-
-// import {
-//     onEditorScroll,
-//     scrollEditor
-// } from './ScrollSync';
-
-const markdown = new MarkdownIt({
-    highlight(str, lang) {
-
-        if (lang && hljs.getLanguage(lang)) {
-            try {
-                return hljs.highlight(lang, str).value;
-            }
-            catch (__) {}
-        }
-
-        return ''; // use external default escaping
-    }
-});
-
-markdown
-    .use(markdownItDeflist)
-    .use(markdownItEmoji)
-    .use(markdownItFootnote)
-    .use(markdownItIns)
-    .use(markdownItMark)
-    .use(markdownItAbbr)
-    .use(markdownItContainer, 'warning')
-    .use(markdownItSub)
-    .use(markdownItSup)
-    .use(markdownItAnchor, {
-        level: 1,
-        permalinkSymbol: '¶',
-        permalink: true,
-        permalinkClass: 'header-anchor'
-    });
-
-/* eslint-disable fecs-camelcase */
-markdown.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-    // If you are sure other plugins can't add `target` - drop check below
-
-    if (!/^#/.test(tokens[idx].attrGet('href'))) {
-
-        const aIndex = tokens[idx].attrIndex('target');
-
-        if (aIndex < 0) {
-            tokens[idx].attrPush(['target', '_blank']); // add new attribute
-        }
-        else {
-            tokens[idx].attrs[aIndex][1] = '_blank';    // replace value of existing attr
-        }
-
-    }
-
-    // pass token to default renderer.
-    return self.renderToken(tokens, idx, options, env, self);
-};
-/* eslint-enable fecs-camelcase */
-
-
-function injectLineNumbers(tokens, idx, options, env, slf) {
-    if (tokens[idx].map && tokens[idx].level === 0) {
-        tokens[idx].attrSet('data-line', tokens[idx].map[0] + '');
-    }
-    return slf.renderToken(tokens, idx, options, env, slf);
-}
-
-[
-    'table_open',
-    'blockquote_open',
-    'hr',
-    'heading_open',
-    'paragraph_open'
-].forEach(name => {
-    markdown.renderer.rules[name] = injectLineNumbers;
-});
-
+import Markdown from './Markdown';
+import smoothScroll from '../common/util/smoothScroll';
 
 export default class Preview extends Component {
 
     componentDidMount() {
-        this.buildId = 0;
-        this.updateScrollMap();
 
-        // onEditorScroll(e => {
-        //
-        //     if (!this.isScrollMapReady()) {
-        //         this.updateScrollMap();
-        //     }
-        //
-        //     this.syncScroll(e.begin);
-        //
-        // });
+        if (this.props.scroll) {
+            this.buildScrollMap();
+            return;
+        }
 
     }
 
-    updateScrollMap() {
-        this.scrollMap = this.buildScrollMap();
+    componentWillReceiveProps(nextProps) {
+
+        let {value, scroll} = nextProps;
+
+        if (this.props.value !== value || !this.scrollMap) {
+            this.needToRebuildPosition = true;
+        }
+
+        if (this.props.scroll !== scroll) {
+            this.needToScroll = true;
+        }
+
     }
 
     componentDidUpdate() {
-        this.updateScrollMap();
-    }
 
-    componentWillUnmount() {
-        this.scrollMap = null;
-    }
+        if (this.needToRebuildPosition) {
+            this.buildScrollMap();
+            this.needToRebuildPosition = false;
+        }
 
-    syncScroll(line) {
-        const main = this.refs.main;
-        this.syncScrolling = true;
-        main.scrollTop = this.scrollMap[line];
-    }
+        if (this.needToScroll) {
+            this.scroll(this.props.scroll);
+            this.needToScroll = false;
+        }
 
-    isScrollMapReady() {
-        return this.scrollMap.every(
-            (item, i, arr) => (i === 0 || arr[i] > arr[i - 1])
-        );
     }
 
     buildScrollMap() {
 
-        let index = this.props.value.split('\n').map(_ => -1);
+        let {value, scroll} = this.props;
 
-        let lights = Array
-            .from(this.refs.main.querySelectorAll('[data-line]'))
-            .map(element => {
-                return {
-                    line: +element.getAttribute('data-line'),
-                    top: element.offsetTop
-                };
-            });
+        if (!value) {
+            return;
+        }
 
-        lights.forEach(({line, top}) => {
-            index[line] = top;
-        });
+        let lineCount = scroll.lineCount;
+        let main = this.refs.main;
+        let baseOffsetTop = main.firstChild.firstChild.offsetTop;
 
-        index[0] = 0;
-        index.push(this.refs.main.scrollHeight);
+        let scrollMap = []
+            .slice
+            .call(main.querySelectorAll('[data-sourcepos]'))
+            .reduce((map, dom) => {
 
-        lights = lights.map(light => light.line);
-        lights.push(index.length - 1);
+                let match = /^(\d+):\d+-(\d+):\d+$/
+                    .exec(dom.getAttribute('data-sourcepos'));
 
-        // 找不行行标的推测位置
-        for (let i = 0, len = index.length, p = 0; i < len; i++) {
+                let startLine = +match[1] - 1;
+                let stopLine = +match[2];
 
-            if (index[i] !== -1) {
-                p++;
+                let {offsetHeight, offsetTop} = dom;
+
+                for (let i = 0, len = stopLine - startLine; i < len; i++) {
+                    let index = startLine + i;
+                    map[index] = Math.round(offsetTop + i * offsetHeight / len) - baseOffsetTop;
+                    if (map.max < index) {
+                        map.max = index;
+                    }
+                    if (map.min > index) {
+                        map.min = index;
+                    }
+                }
+
+                return map;
+
+            }, {min: Number.MAX_SAFE_INTEGER, max: -1});
+
+        let index = -1;
+
+        for (let i = 0; i < lineCount; i++) {
+
+            if (
+                // 没找到空槽段起始点
+                index === -1 && scrollMap[i] != null
+                // 在空槽段，没到结束点
+                || index !== -1 && scrollMap[i] == null
+            ) {
                 continue;
             }
 
-            const a = lights[p - 1];
-            const b = lights[p];
+            // 找到空槽段起点
+            if (index === -1 && scrollMap[i] == null) {
+                index = i - 1;
+                continue;
+            }
 
-            index[i] = Math.round(
-                (index[b] * (i - a) + index[a] * (b - i)) / (b - a)
-            );
+            let step = (scrollMap[i] - scrollMap[index]) / (i - index);
+
+            // 找到空槽段结束点
+            for (let j = 1; j < i - index; j++) {
+                scrollMap[index + j] = scrollMap[index] + j * step;
+            }
+
+            index = -1;
 
         }
 
-        return index;
+        this.scrollMap = scrollMap;
+
+    }
+
+    scroll(scrollState) {
+
+        let {start, stop, direction, top, bottom} = scrollState;
+        let main = this.refs.main;
+        let currentScrollTop = main.scrollTop;
+        let line = direction === 'up' ? start : stop;
+        let map = this.scrollMap[line];
+
+        if (
+            direction === 'down' && map < currentScrollTop
+            || direction === 'up' && map > currentScrollTop
+        ) {
+            return;
+        }
+
+        let distance = direction === 'up' ? top : bottom;
+
+        let target;
+
+        if (line >= this.scrollMap.max) {
+            target = main.scrollHeight;
+        }
+        else if (line <= this.scrollMap.min) {
+            target = 0;
+        }
+        else {
+
+            target = direction === 'down'
+                ? map - main.offsetHeight + distance
+                : map + distance;
+
+        }
+
+        smoothScroll(main, currentScrollTop, target);
 
     }
 
     render() {
 
+        let {fontSize, value} = this.props;
+
         return (
             <div
                 ref="main"
-                onScroll={e => {
-
-                    if (this.syncScrolling) {
-                        this.syncScrolling = false;
-                        return;
-                    }
-
-                    if (!this.isScrollMapReady()) {
-                        this.updateScrollMap();
-                    }
-
-                    // const line = this.scrollMap
-                    //     .findIndex(top => top >= e.target.scrollTop);
-
-                    // scrollEditor(line);
-
-                }}
-                className={styles.preview}
-                style={{fontSize: this.props.fontSize}}
-                dangerouslySetInnerHTML={{
-                    __html: markdown.render(this.props.value)
-                }}>
+                className="preview"
+                style={{fontSize}}>
+                <Markdown source={value} />
             </div>
         );
     }
